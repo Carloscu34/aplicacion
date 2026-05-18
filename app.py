@@ -3,12 +3,18 @@ from werkzeug.utils import secure_filename
 import os
 from database.conexion import conectar
 import base64
+import cv2
+import qrcode
+from fpdf import FPDF
 from datetime import datetime
 
 app = Flask(__name__)
 CARPETA_FOTOS = 'static/fotos'
 
 app.config['CARPETA_FOTOS'] = CARPETA_FOTOS
+detector_facial = cv2.CascadeClassifier(
+    'modelo/haarcascade_frontalface_default.xml'
+)
 @app.route('/')
 def inicio():
 
@@ -85,9 +91,12 @@ def guardar():
     id_seccion = request.form['id_seccion']
 
     imagen_base64 = foto_capturada.split(",")[1]
+
     imagen_bytes = base64.b64decode(imagen_base64)
 
-    nombre_foto = datetime.now().strftime("%Y%m%d%H%M%S") + ".png"
+    nombre_foto = datetime.now().strftime(
+        "%Y%m%d%H%M%S"
+    ) + ".png"
 
     ruta_foto = os.path.join(
         app.config['CARPETA_FOTOS'],
@@ -96,6 +105,217 @@ def guardar():
 
     with open(ruta_foto, "wb") as archivo:
         archivo.write(imagen_bytes)
+
+    imagen = cv2.imread(ruta_foto)
+
+    gris = cv2.cvtColor(
+        imagen,
+        cv2.COLOR_BGR2GRAY
+    )
+
+    rostros = detector_facial.detectMultiScale(
+    gris,
+    scaleFactor=1.3,
+    minNeighbors=8,
+    minSize=(100, 100)
+)
+
+    if len(rostros) == 0:
+
+        os.remove(ruta_foto)
+
+        return redirect(
+            url_for(
+                'inicio',
+                mensaje='No se detectó un rostro'
+            )
+        )
+
+    conexion = conectar()
+
+    cursor = conexion.cursor()
+
+    sql = """
+    INSERT INTO personas
+    (
+        carnet,
+        nombres,
+        apellidos,
+        telefono,
+        correo,
+        fotografia,
+        id_tipo,
+        id_carrera,
+        id_seccion
+    )
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+
+    valores = (
+        carnet,
+        nombres,
+        apellidos,
+        telefono,
+        correo,
+        ruta_foto,
+        id_tipo,
+        id_carrera,
+        id_seccion
+    )
+
+    cursor.execute(sql, valores)
+
+    conexion.commit()
+    qr = qrcode.make(carnet)
+
+    ruta_qr = os.path.join(
+    'static/qr',
+    carnet + '.png'
+)
+
+    qr.save(ruta_qr)
+    pdf = FPDF(
+    orientation='L',
+    unit='mm',
+    format=('A4')
+)
+
+    pdf.add_page()
+
+    pdf.image(
+    'static/logo/logo_umg.png',
+    x=3,
+    y=3,
+    w=20
+)
+
+    pdf.set_font(
+    'Arial',
+    'B',
+    10
+)
+
+    pdf.set_xy(25, 5)
+
+    pdf.cell(
+    50,
+    5,
+    'UNIVERSIDAD MARIANO GALVEZ'
+)
+
+    pdf.set_font(
+    'Arial',
+    '',
+    8
+)
+
+    #*pdf.set_xy(25, 12)
+
+   # pdf.cell(
+   # 50,
+   # 5,
+   # 'CARNET UNIVERSITARIO'
+#)
+
+    pdf.image(
+    ruta_foto,
+    x=5,
+    y=28,
+    w=25,
+    h=30
+)
+
+    pdf.set_font(
+    'Arial',
+    'B',
+    9
+)
+    pdf.set_xy(35, 20)
+    pdf.cell(
+    40,
+    5,
+    '2026'
+    )
+    pdf.set_xy(35, 25)
+
+    pdf.cell(
+    40,
+    5,
+    f'{nombres} {apellidos}'
+)
+
+    pdf.set_font(
+    'Arial',
+    '',
+    8
+)
+
+    pdf.set_xy(35, 32)
+
+    pdf.cell(
+    40,
+    5,
+    f'Carnet: {carnet}'
+)
+
+    pdf.set_xy(35, 37)
+
+    pdf.cell(
+    40,
+    5,
+    f'Telefono: {telefono}'
+)
+
+    pdf.set_xy(35, 42)
+
+    pdf.cell(
+    40,
+    5,
+    f'Correo: {correo}'
+)
+
+    pdf.image(
+    ruta_qr,
+    x=65,
+    y=22,
+    w=18
+)
+
+    pdf.set_xy(35, 47)
+
+    pdf.cell(
+    40,
+    5,
+    f'Seccion: {id_seccion}'
+)
+
+    pdf.set_xy(35, 52)
+
+    pdf.cell(
+    40,
+    5,
+    f'Tipo: {id_tipo}'
+)
+
+    ruta_pdf = os.path.join(
+        'static/carnets',
+        carnet + '.pdf'
+    )
+
+    pdf.output(ruta_pdf)
+
+    conexion.close()
+
+    return redirect(
+        url_for(
+            'inicio',
+            mensaje='Persona registrada correctamente'
+        )
+    )
+    url_for(
+            'inicio',
+            mensaje='Persona registrada correctamente'
+        )
 
     conexion = conectar()
     cursor = conexion.cursor()
