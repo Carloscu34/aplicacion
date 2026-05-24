@@ -190,75 +190,49 @@
 
                     </div>
 
-                    <div class="row">
+<div class="row">
 
-                        <div class="col-md-4 mb-3">
+    <div class="col-md-4 mb-3">
+        <label class="form-label">Tipo Persona</label>
 
-                            <label class="form-label">
-                                Tipo Persona
-                            </label>
+        <select name="id_tipo" class="form-select" required>
+            {% for tipo in tipos %}
+                <option value="{{ tipo[0] }}">
+                    {{ tipo[1] }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
-                            <select
-    name="id_tipo"
-    class="form-select"
->
+    <div class="col-md-4 mb-3">
+        <label class="form-label">Carrera</label>
 
-    {% for tipo in tipos %}
+        <select name="id_carrera" class="form-select" required>
+            {% for carrera in carreras %}
+                <option value="{{ carrera[0] }}">
+                    {{ carrera[1] }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
-    <option value="{{ tipo[0] }}">
-        {{ tipo[1] }}
-    </option>
+    <div class="col-md-4 mb-3">
+        <label class="form-label">Sede</label>
 
-    {% endfor %}
+        <select name="id_sede" class="form-select" required>
+            {% for sede in sedes %}
+                <option value="{{ sede[0] }}">
+                    {{ sede[1] }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
-</select>
-
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-
-                            <label class="form-label">
-                                Carrera
-                            </label>
-
-                            <select
-    name="id_carrera"
-    class="form-select"
->
-
-    {% for carrera in carreras %}
-
-    <option value="{{ carrera[0] }}">
-        {{ carrera[1] }}
-    </option>
-
-    {% endfor %}
-
-</select>
+</div>
 
                         </div>
 
-                        <div class="col-md-4 mb-3">
-
-                            <label class="form-label">
-                                Sección
-                            </label>
-
-                            <select
-    name="id_seccion"
-    class="form-select"
->
-
-    {% for seccion in secciones %}
-
-    <option value="{{ seccion[0] }}">
-        {{ seccion[1] }}
-    </option>
-
-    {% endfor %}
-
-</select>
-                        </div>
+                       
 
                     </div>
 

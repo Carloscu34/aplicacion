@@ -24,7 +24,7 @@ def inicio():
 
     cursor.execute("""
 
-    SELECT
+SELECT
 
     personas.id_persona,
     personas.carnet,
@@ -38,7 +38,7 @@ def inicio():
 
     carreras.nombre_carrera,
 
-    secciones.seccion
+    sedes.nombre_sede
 
     FROM personas
 
@@ -48,8 +48,8 @@ def inicio():
     INNER JOIN carreras
     ON personas.id_carrera = carreras.id_carrera
 
-    INNER JOIN secciones
-    ON personas.id_seccion = secciones.id_seccion
+    INNER JOIN sedes
+    ON personas.id_sede = sedes.id_sede
 
     """)
 
@@ -61,8 +61,10 @@ def inicio():
     cursor.execute("SELECT * FROM carreras")
     carreras = cursor.fetchall()
 
-    cursor.execute("SELECT * FROM secciones")
-    secciones = cursor.fetchall()
+    cursor.execute("SELECT * FROM sedes")
+    sedes = cursor.fetchall()
+
+
 
     conexion.close()
 
@@ -73,7 +75,7 @@ def inicio():
         personas=personas,
         tipos=tipos,
         carreras=carreras,
-        secciones=secciones,
+        sedes=sedes,
         mensaje=mensaje
     )
 @app.route('/guardar', methods=['POST'])
@@ -88,7 +90,8 @@ def guardar():
 
     id_tipo = request.form['id_tipo']
     id_carrera = request.form['id_carrera']
-    id_seccion = request.form['id_seccion']
+    id_sede = request.form['id_sede']
+   
 
     imagen_base64 = foto_capturada.split(",")[1]
 
@@ -146,24 +149,37 @@ def guardar():
         fotografia,
         id_tipo,
         id_carrera,
-        id_seccion
+        id_sede
     )
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
     valores = (
-        carnet,
-        nombres,
-        apellidos,
-        telefono,
-        correo,
-        ruta_foto,
-        id_tipo,
-        id_carrera,
-        id_seccion
-    )
+    carnet,
+    nombres,
+    apellidos,
+    telefono,
+    correo,
+    ruta_foto,
+    id_tipo,
+    id_carrera,
+    id_sede
+)
 
     cursor.execute(sql, valores)
+    
+    cursor.execute(
+        "SELECT nombre_carrera FROM carreras WHERE id_carrera = %s",
+        (id_carrera,)
+    )
+    nombre_carrera = cursor.fetchone()[0]
+
+    cursor.execute(
+            "SELECT nombre FROM tipos_persona WHERE id_tipo = %s",
+        (id_tipo,)
+        )
+
+    nombre_tipo = cursor.fetchone()[0]
 
     conexion.commit()
     qr = qrcode.make(carnet)
@@ -209,13 +225,6 @@ def guardar():
     8
 )
 
-    #*pdf.set_xy(25, 12)
-
-   # pdf.cell(
-   # 50,
-   # 5,
-   # 'CARNET UNIVERSITARIO'
-#)
 
     pdf.image(
     ruta_foto,
@@ -258,22 +267,6 @@ def guardar():
     f'Carnet: {carnet}'
 )
 
-    pdf.set_xy(35, 37)
-
-    pdf.cell(
-    40,
-    5,
-    f'Telefono: {telefono}'
-)
-
-    pdf.set_xy(35, 42)
-
-    pdf.cell(
-    40,
-    5,
-    f'Correo: {correo}'
-)
-
     pdf.image(
     ruta_qr,
     x=65,
@@ -281,21 +274,21 @@ def guardar():
     w=18
 )
 
-    pdf.set_xy(35, 47)
+    
+    pdf.set_xy(35, 42)
 
     pdf.cell(
-    40,
-    5,
-    f'Seccion: {id_seccion}'
-)
-
-    pdf.set_xy(35, 52)
+        40,
+        5,
+        f'Tipo: {nombre_tipo}'
+    )
+    pdf.set_xy(35, 37)
 
     pdf.cell(
-    40,
-    5,
-    f'Tipo: {id_tipo}'
-)
+        40,
+        5,
+        f'Carrera: {nombre_carrera}'
+    )
 
     ruta_pdf = os.path.join(
         'static/carnets',
@@ -331,7 +324,7 @@ def guardar():
         fotografia,
         id_tipo,
         id_carrera,
-        id_seccion
+        id_sede
     )
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
@@ -345,7 +338,7 @@ def guardar():
         ruta_foto,
         id_tipo,
         id_carrera,
-        id_seccion
+        id_sede
     )
 
     cursor.execute(sql, valores)

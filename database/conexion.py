@@ -6,7 +6,7 @@ def conectar():
         host="localhost",
         user="root",
         password="Carlos@123",
-        database="db_biometrico"
+        database="bd_biometrico"
     )
 
     return conexion
