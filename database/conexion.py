@@ -4,8 +4,8 @@ def conectar():
 
     conexion = mysql.connector.connect(
         host="localhost",
-        user="root",
-        password="Carlos@123",
+        user="flaskuser",
+        password="1234",
         database="bd_biometrico"
     )
 
