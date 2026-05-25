@@ -7,6 +7,6 @@ Jinja2==3.1.6
 MarkupSafe==3.0.3
 mysql-connector-python==9.7.0
 numpy==2.4.6
-opencv-python==4.13.0.92
+opencv-python-headless
 qrcode==8.2
 Werkzeug==3.1.8
